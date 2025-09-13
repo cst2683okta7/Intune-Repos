@@ -1,0 +1,29 @@
+name: CI - Teste Deploy Key SSH
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  test-ssh-deploy-key:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configurar chave SSH (deploy key)
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_KEY_INTUNE_REPOS }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan ssh.github.com >> ~/.ssh/known_hosts
+          # Força SSH a usar porta 443 e a chave correta
+          echo -e "Host github.com\n  HostName ssh.github.com\n  User git\n  Port 443\n  IdentityFile ~/.ssh/id_ed25519\n  IdentitiesOnly yes" > ~/.ssh/config
+
+      - name: Clonar o próprio repositório via SSH (porta 443)
+        run: |
+          git clone git@github.com:${{ github.repository }} repo-clone
+          ls repo-clone
+
+      # Exemplo de uso de scripts organizados
+      # - name: Executar script auxiliar
+      #   run: bash scripts/exemplo.sh
